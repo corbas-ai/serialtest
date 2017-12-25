@@ -74,4 +74,5 @@ main(int argc, char** argv ){
     tcsetattr(h,TCSADRAIN,&oldtm);
     close(h);
 
+    return 0;
 }
