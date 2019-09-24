@@ -55,12 +55,12 @@ main(int argc, char** argv ){
         tcdrain(h);
         int i = 0;
         int j = 0;
-
+        char rbuff[PACK_LEN]={};
         for(; i < PACK_LEN; i++){
             int sel = select(h+1,&fds,NULL,NULL,&tm);
             if(sel>0){
                 if(FD_ISSET(h,&fds)){
-                    int r = read(h,buff+j,1);
+                    int r = read(h,rbuff+j,1);
                     if(r<=0){
                         perror("when reading");
                         break;
@@ -71,11 +71,19 @@ main(int argc, char** argv ){
                 FD_SET(h,&fds);
             }
         }
-        printf("read answr %d bytes:",j);
+        printf("read answer %d bytes       pack:",j);
+        int eq = 1;
         for(int i = 0; i <j;i++){
-            printf(" %02hhX",buff[i]);
+            printf(" %02hhX",rbuff[i]);
+            if(buff[i]!=rbuff[i]){
+                eq = 0;
+            }
         }
-        printf(".\n");
+        if (eq == 1 && j == v){
+            printf(" same, ok.\n");
+        }else{
+            printf(" not equal. err\n");
+        }
         struct timespec ts = {.tv_sec=0,.tv_nsec=SLEEPNS};
         nanosleep(&ts,NULL);
     }
