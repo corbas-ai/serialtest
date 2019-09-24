@@ -47,7 +47,11 @@ main(int argc, char** argv ){
         int w = write(h,buff,v);
         if(w<=0){
         }
-        printf("on %s writes %d bytes\n",fname,w);
+        printf("on %s writes %d bytes: ",fname,w);
+        for(int i = 0; i < v;i++){
+            printf(" %02hhX",buff[i]);
+        }
+        printf(".\n");
         tcdrain(h);
         int i = 0;
         int j = 0;
