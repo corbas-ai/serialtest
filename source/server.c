@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include <time.h>
 
-#define UTM 5000
+#define UTM 250000
 #define PACK_LEN 18
-#define SLEEPNS 500000000
+#define SLEEPNS 1
 
 int 
 main(int argc, char** argv ){
@@ -60,13 +60,14 @@ main(int argc, char** argv ){
                 FD_SET(h,&fds);
             }
         }
-        printf("on %s read %d bytes:",fname,j);
-        for(int i = 0; i <j;i++){
-            printf(" %02hhX",buff[i]);
-        }
-        printf(".\n");
+        
         if(j==PACK_LEN){
             write(h,buff,PACK_LEN);
+            printf("on %s read and echoed %d bytes:",fname,j);
+            for(int i = 0; i <j;i++){
+                printf(" %02hhX",buff[i]);
+            }
+            printf(".\n");
         }
         struct timespec ts = {.tv_sec=0,.tv_nsec=SLEEPNS};
         nanosleep(&ts,NULL);
