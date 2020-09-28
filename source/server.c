@@ -7,9 +7,10 @@
 #include <unistd.h>
 #include <time.h>
 
-#define UTM 250000
+#define UTM 5000
 #define PACK_LEN 18
 #define SLEEPNS 1
+#define BAUDS B115200
 
 int 
 main(int argc, char** argv ){
@@ -22,7 +23,7 @@ main(int argc, char** argv ){
     if(h<0){
         perror("cat");
     }
-    printf("opening server on %s 115200,8N2\n",fname);
+    printf("opening server on %s %u,8N2\n",fname,BAUDS);
 
     struct termios oldtm={};
     if(tcgetattr(h,&oldtm)){
@@ -30,8 +31,8 @@ main(int argc, char** argv ){
         exit(EXIT_FAILURE);
     }
     struct termios newtm={.c_cflag=CS8|CSTOPB|CREAD|CLOCAL};
-    cfsetispeed(&newtm,B115200);
-    cfsetospeed(&newtm,B115200);
+    cfsetispeed(&newtm,BAUDS);
+    cfsetospeed(&newtm,BAUDS);
     tcsetattr(h,TCSANOW,&newtm);    
 
     
@@ -45,8 +46,8 @@ main(int argc, char** argv ){
         char buff[PACK_LEN];
         int i = 0;
         int j = 0;
+        int sel = select(h+1,&fds,NULL,NULL,&tm);
         for(; i < PACK_LEN; i++){
-            int sel = select(h+1,&fds,NULL,NULL,&tm);
             if(sel>0){
                 if(FD_ISSET(h,&fds)){
                     int r = read(h,buff+j,1);
@@ -58,11 +59,14 @@ main(int argc, char** argv ){
                     }
                 }
                 FD_SET(h,&fds);
+                sel = select(h+1,&fds,NULL,NULL,&tm);
+            }else{
+                break;
             }
         }
-        
         if(j==PACK_LEN){
             write(h,buff,PACK_LEN);
+            tcdrain(h);
             printf("on %s read and echoed %d bytes:",fname,j);
             for(int i = 0; i <j;i++){
                 printf(" %02hhX",buff[i]);
@@ -70,7 +74,7 @@ main(int argc, char** argv ){
             printf(".\n");
         }
         struct timespec ts = {.tv_sec=0,.tv_nsec=SLEEPNS};
-        nanosleep(&ts,NULL);
+        //nanosleep(&ts,NULL);
     }
     tcsetattr(h,TCSADRAIN,&oldtm);
     close(h);

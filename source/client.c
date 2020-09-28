@@ -7,9 +7,11 @@
 #include <unistd.h>
 #include <time.h>
 
-#define UTM 5000
+#define UTM 40000
 #define PACK_LEN 18
 #define SLEEPNS 500000000
+#define WAITSLEEPNS  10000
+#define BAUDS B115200
 
 int 
 main(int argc, char** argv ){
@@ -22,7 +24,7 @@ main(int argc, char** argv ){
     if(h<0){
         perror("cat");
     }
-    printf("opening server on %s 115200,8N2\n",fname);
+    printf("opening server on %s %u,8N2\n",fname,BAUDS);
 
     struct termios oldtm={};
     if(tcgetattr(h,&oldtm)){
@@ -30,34 +32,31 @@ main(int argc, char** argv ){
         exit(EXIT_FAILURE);
     }
     struct termios newtm={.c_cflag=CS8|CSTOPB|CREAD|CLOCAL};
-    cfsetispeed(&newtm,B115200);
-    cfsetospeed(&newtm,B115200);
+    cfsetispeed(&newtm,BAUDS);
+    cfsetospeed(&newtm,BAUDS);
     tcsetattr(h,TCSANOW,&newtm);    
-
+    tcflush(h,TCIOFLUSH);
     
-    
+    char buff[PACK_LEN] = {0,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf,0xcc,0xff};
+    int cntr = 0;
     for(;;){
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(h,&fds);
         struct timeval tm={.tv_sec = 0, .tv_usec=UTM};
-         
-        char buff[PACK_LEN];
-        int v = sprintf(buff,"034567abcdef1234cc");
+        buff[0]=cntr%256; 
+        int v = sizeof(buff); //snprintf(buff,sizeof(buff),"%18s","034567abcdef123\xcc\xff");
         int w = write(h,buff,v);
         if(w<=0){
         }
-        printf("on %s writes %d bytes: ",fname,w);
-        for(int i = 0; i < v;i++){
-            printf(" %02hhX",buff[i]);
-        }
-        printf(".\n");
         tcdrain(h);
+        struct timespec ts = {.tv_sec=0,.tv_nsec=WAITSLEEPNS};
+        nanosleep(&ts,NULL);
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(h,&fds);
         int i = 0;
         int j = 0;
         char rbuff[PACK_LEN]={};
+        int sel = select(h+1,&fds,NULL,NULL,&tm);
         for(; i < PACK_LEN; i++){
-            int sel = select(h+1,&fds,NULL,NULL,&tm);
             if(sel>0){
                 if(FD_ISSET(h,&fds)){
                     int r = read(h,rbuff+j,1);
@@ -69,9 +68,18 @@ main(int argc, char** argv ){
                     }
                 }
                 FD_SET(h,&fds);
+                sel = select(h+1,&fds,NULL,NULL,&tm);
+            }else{
+                break;
             }
         }
-        printf("read answer %d bytes       pack:",j);
+        v = j;
+        printf("on %s writes %d bytes: ",fname,w);
+        for(int i = 0; i < v;i++){
+            printf(" %02hhX",buff[i]);
+        }
+        printf(".\n");
+        printf("\tread answer %d bytes       pack:",j);
         int eq = 1;
         for(int i = 0; i <j;i++){
             printf(" %02hhX",rbuff[i]);
@@ -84,8 +92,10 @@ main(int argc, char** argv ){
         }else{
             printf(" not equal. err\n");
         }
-        struct timespec ts = {.tv_sec=0,.tv_nsec=SLEEPNS};
-        nanosleep(&ts,NULL);
+        struct timespec step_ts = {.tv_sec=0,.tv_nsec=SLEEPNS};
+        nanosleep(&step_ts,NULL);
+        
+        ++cntr;
     }
     tcsetattr(h,TCSADRAIN,&oldtm);
     close(h);
