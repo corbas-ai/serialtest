@@ -10,7 +10,13 @@
 #define UTM 5000
 #define PACK_LEN 18
 #define SLEEPNS 1
+
+#ifndef BAUDS
 #define BAUDS B115200
+#endif
+
+#define __tos(s) _tos(s)
+#define _tos(_def) #_def
 
 int 
 main(int argc, char** argv ){
@@ -23,7 +29,7 @@ main(int argc, char** argv ){
     if(h<0){
         perror("cat");
     }
-    printf("opening server on %s %u,8N2\n",fname,BAUDS);
+    printf("opening server on %s "__tos(BAUDS)",8N2\n",fname);
 
     struct termios oldtm={};
     if(tcgetattr(h,&oldtm)){
