@@ -1,7 +1,8 @@
 P=server
 N=client
 BAUD=
-CFLAGS=-std=gnu11 $(BAUD)
+WAIT_SLEEPNS=
+CFLAGS=-std=gnu11 $(BAUD) $(WAIT_SLEEPNS)
 
 all: $P $N
 
@@ -11,3 +12,6 @@ $N: client.c
 clean:
 	rm -rf $P $N
 
+remake:
+	make clean
+	make

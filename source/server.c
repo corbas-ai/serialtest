@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <errno.h>
 #include <termios.h>
+#include <string.h>
 #include <stdlib.h>
 #include <error.h>
 #include <fcntl.h>
@@ -7,9 +9,8 @@
 #include <unistd.h>
 #include <time.h>
 
-#define UTM 5000
+#define UTM_US 5000
 #define PACK_LEN 18
-#define SLEEPNS 1
 
 #ifndef BAUDS
 #define BAUDS B115200
@@ -27,9 +28,10 @@ main(int argc, char** argv ){
     const char* fname = argv[1];
     int h = open(fname,O_RDWR|O_NOCTTY);
     if(h<0){
-        perror("cat");
+        fprintf(stderr,"cant open dev %s: %s",fname ,strerror(errno));
+        exit(EXIT_FAILURE);
     }
-    printf("opening server on %s "__tos(BAUDS)",8N2\n",fname);
+    printf("Opening server on %s "__tos(BAUDS)",8N2\n",fname);
 
     struct termios oldtm={};
     if(tcgetattr(h,&oldtm)){
@@ -47,7 +49,7 @@ main(int argc, char** argv ){
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(h,&fds);
-        struct timeval tm={.tv_sec = 0, .tv_usec=UTM};
+        struct timeval tm={.tv_sec = 0, .tv_usec=UTM_US};
          
         char buff[PACK_LEN];
         int i = 0;
@@ -79,8 +81,6 @@ main(int argc, char** argv ){
             }
             printf(".\n");
         }
-        struct timespec ts = {.tv_sec=0,.tv_nsec=SLEEPNS};
-        //nanosleep(&ts,NULL);
     }
     tcsetattr(h,TCSADRAIN,&oldtm);
     close(h);
