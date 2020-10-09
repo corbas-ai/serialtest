@@ -44,6 +44,6 @@ $ ./client /tmp/ttyS1
 >	read answer 18 bytes  pack:  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F CC 01 same, ok.
 ```
 
-'Ntry.Nmsg:Errors  >PORT 'writes' Nbytes  'bytes:'  hex sec .
+    Ntry.Nmsg:Errors  >PORT 'writes' Nbytes  'bytes:'  hex sec .
 
-    'read answer' Nbytes 'pack:' hex seq [ 'same, ok' | 'not equal. err' ].
+      read answer' Nbytes 'pack:' hex seq [ 'same, ok' | 'not equal. err' ].
