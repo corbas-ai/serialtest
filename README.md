@@ -5,8 +5,8 @@ Tested platform:  Linux.
 
 # Build
 
-$ cd source
-$ make remake
+   $ cd source
+   $ make remake
 
 # Testing
 
