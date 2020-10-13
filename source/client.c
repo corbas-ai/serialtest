@@ -7,14 +7,15 @@
 #include <unistd.h>
 #include <time.h>
 
-#define UTM_US         10
+#define ONE_SECNS      1000000000L
+#define UTM_US         100
 
 #ifndef WAIT_SLEEPNS
-#define WAIT_SLEEPNS   8700000
+#define WAIT_SLEEPNS   15500000
 #endif
 
 #ifndef PERIOD_SLEEPNS
-#define PERIOD_SLEEPNS 100000000
+#define PERIOD_SLEEPNS 1000000000
 #endif
 
 #define PACK_LEN 18
@@ -23,7 +24,7 @@
 #define BAUDS B115200
 #endif
 
-#define N_DEVS 30
+#define N_DEVS 1
 
 #define __tos(s) _tos(s)
 #define _tos(_def) #_def
@@ -92,11 +93,11 @@ main(int argc, char** argv ){
                 }
             }
             
-            printf("%02d.%02d:%d >%s writes %d   bytes: ",cntr%100,p,n_error,fname,w);
+            printf(" %04d.%03d:%d  >  writes   %d bytes: ",cntr%1000,p,n_error,w);
             for(int i = 0; i < v;i++){
                 printf(" %02hhX",buff[i]);
             }
-            printf(".\n");
+            printf(" to %s .\n",fname);
             printf("\tread answer %d bytes  ",j);
             int eq = 0;
             if(v == j){
@@ -128,8 +129,9 @@ main(int argc, char** argv ){
                 printf("\n");
             }
         }
-        struct timespec step_ts = {.tv_sec=0,.tv_nsec=PERIOD_SLEEPNS};
+        struct timespec step_ts = {.tv_sec=PERIOD_SLEEPNS/1000000000l,.tv_nsec=PERIOD_SLEEPNS % ONE_SECNS};
         nanosleep(&step_ts,NULL);
+
         ++cntr;
     }
     tcsetattr(h,TCSADRAIN,&oldtm);

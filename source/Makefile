@@ -1,8 +1,8 @@
 P=server
 N=client
-BAUD=
+BAUDS=
 WAIT_SLEEPNS=
-CFLAGS=-std=gnu11 $(BAUD) $(WAIT_SLEEPNS)
+CFLAGS=-std=gnu11 $(BAUDS) $(WAIT_SLEEPNS)
 
 all: $P $N
 
